@@ -12,7 +12,8 @@ declare module 'motia' {
   }
 
   interface Handlers {
-    'event.sensor.process': EventHandler<{ sensorId: string; value: number; unit: string; type: string; timestamp: string; date: string }, never>
+    'workflow.energy.optimize': EventHandler<{ optimizationId: string; date: string; totalConsumption: number; threshold: number; excessAmount: number; triggeredAt: string }, never>
+    'event.sensor.process': EventHandler<{ sensorId: string; value: number; unit: string; type: string; timestamp: string; date: string }, { topic: 'optimization.required'; data: { optimizationId: string; date: string; totalConsumption: number; threshold: number; excessAmount: number; triggeredAt: string } }>
     'api.user.preferences': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'api.sensor.ingest': ApiRouteHandler<Record<string, unknown>, unknown, { topic: 'sensor.reading.created'; data: { sensorId: string; value: number; unit: string; type: string; timestamp: string; date: string } }>
   }
