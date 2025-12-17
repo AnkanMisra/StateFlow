@@ -22,7 +22,7 @@
     "@motiadev/plugin-observability": "^0.17.9-beta.191",
     "@motiadev/plugin-states": "^0.17.9-beta.191",
     "motia": "^0.17.9-beta.191",
-    "zod": "^4.1.12"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@motiadev/workbench": "^0.17.9-beta.191",
