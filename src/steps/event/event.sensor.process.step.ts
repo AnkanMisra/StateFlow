@@ -141,6 +141,10 @@ export const handler: Handlers['event.sensor.process'] = async (input, { emit, l
         // ========================================
         const optimizationId = `opt-${date}-${Date.now()}`;
 
+        // Mark FIRST to prevent race condition (set-before-emit pattern)
+        // In concurrent scenarios, this is fail-safe: may skip valid trigger, never duplicates
+        await state.set('usage', `daily/${date}/optimizationTriggered`, true);
+
         await emit({
             topic: TOPICS.OPTIMIZATION_REQUIRED,
             data: {
@@ -152,9 +156,6 @@ export const handler: Handlers['event.sensor.process'] = async (input, { emit, l
                 triggeredAt: new Date().toISOString(),
             },
         });
-
-        // Mark this day as having triggered an optimization
-        await state.set('usage', `daily/${date}/optimizationTriggered`, true);
 
         logger.info('event.sensor.process: EMITTED optimization.required', {
             topic: TOPICS.OPTIMIZATION_REQUIRED,
