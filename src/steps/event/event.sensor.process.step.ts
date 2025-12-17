@@ -123,6 +123,20 @@ export const handler: Handlers['event.sensor.process'] = async (input, { emit, l
 
     if (thresholdExceeded) {
         // ========================================
+        // IDEMPOTENCY CHECK: Only trigger once per day
+        // ========================================
+        const alreadyTriggered = await state.get<boolean>('usage', `daily/${date}/optimizationTriggered`);
+
+        if (alreadyTriggered) {
+            logger.info('event.sensor.process: Optimization already triggered for today, skipping duplicate', {
+                date,
+                totalConsumption: dailyUsage.totalConsumption,
+            });
+            logger.info('event.sensor.process: Processing complete');
+            return;
+        }
+
+        // ========================================
         // STEP 5: Emit optimization.required
         // ========================================
         const optimizationId = `opt-${date}-${Date.now()}`;
@@ -138,6 +152,9 @@ export const handler: Handlers['event.sensor.process'] = async (input, { emit, l
                 triggeredAt: new Date().toISOString(),
             },
         });
+
+        // Mark this day as having triggered an optimization
+        await state.set('usage', `daily/${date}/optimizationTriggered`, true);
 
         logger.info('event.sensor.process: EMITTED optimization.required', {
             topic: TOPICS.OPTIMIZATION_REQUIRED,
