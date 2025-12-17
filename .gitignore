@@ -7,5 +7,6 @@ venv
 dist
 *.pyc
 
-# Documentation (AI-generated planning docs)
-docs/
+# Documentation 
+docs
+motia-workbench.json
