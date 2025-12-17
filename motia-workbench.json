@@ -21,8 +21,8 @@
         "y": 234
       },
       "src/steps/event/event.sensor.process.step.ts": {
-        "x": 440,
-        "y": -22
+        "x": -9,
+        "y": 226
       },
       "src/steps/api/api.user.preferences.step.ts": {
         "x": -326,
