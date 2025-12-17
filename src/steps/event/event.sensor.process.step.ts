@@ -1,30 +1,41 @@
 /**
- * Event Step: Sensor Process (Placeholder for Phase 1)
+ * Event Step: Sensor Process
  * 
  * Name: event.sensor.process
  * Type: Event Step
  * Trigger: sensor.reading.created
  * 
- * Responsibility (Phase 2):
- * - Aggregate usage
- * - Update daily usage
- * - Decide whether optimization is needed
+ * Responsibility:
+ * - Aggregate usage data into usage/daily/{date}
+ * - Read user/preferences for thresholds
+ * - Decide deterministically whether optimization is needed
+ * - Emit optimization.required if threshold exceeded
  * 
- * This is a minimal placeholder to enable the emit type in Phase 1.
- * Full implementation will be added in Phase 2.
+ * NO workflow logic here - aggregation + decision emission only.
  */
 
 import type { EventConfig, Handlers } from 'motia';
-import { TOPICS, FLOWS } from '../../constants';
+import {
+    TOPICS,
+    FLOWS,
+    STATE_KEYS,
+    type UsageDailyState,
+    type UserPreferences,
+} from '../../constants';
+
+// Default thresholds for demo (used if user preferences not set)
+const DEFAULT_THRESHOLDS = {
+    dailyMax: 100, // kWh - trigger optimization if exceeded
+    peakHourLimit: 50, // kWh - not used in Phase 2
+};
 
 export const config: EventConfig = {
     name: 'event.sensor.process',
     type: 'event',
-    description: 'Processes incoming sensor readings and aggregates usage data',
+    description: 'Aggregates sensor readings and triggers optimization when thresholds exceeded',
     subscribes: [TOPICS.SENSOR_READING_CREATED],
     emits: [TOPICS.OPTIMIZATION_REQUIRED],
     flows: [FLOWS.ENERGY_OPTIMIZATION],
-    // Input schema defines the expected event data shape
     input: {
         type: 'object',
         properties: {
@@ -39,15 +50,107 @@ export const config: EventConfig = {
     },
 };
 
-export const handler: Handlers['event.sensor.process'] = async (input, { logger }) => {
-    // Placeholder for Phase 1 - just log the event
-    logger.info('SensorProcess received event', {
-        sensorId: input.sensorId,
-        value: input.value,
-        date: input.date,
-        timestamp: input.timestamp,
+export const handler: Handlers['event.sensor.process'] = async (input, { emit, logger, state }) => {
+    const { sensorId, value, date, timestamp } = input;
+
+    logger.info('event.sensor.process: Processing sensor reading', {
+        sensorId,
+        value,
+        date,
+        timestamp,
     });
 
-    // Full implementation with aggregation and optimization trigger will be added in Phase 2
-    logger.info('Event processing complete (Phase 1 placeholder)');
+    // ========================================
+    // STEP 1: Read existing daily usage state
+    // ========================================
+    let dailyUsage: UsageDailyState | null = await state.get<UsageDailyState>('usage', `daily/${date}`);
+
+    if (!dailyUsage) {
+        // Initialize daily usage for this date
+        dailyUsage = {
+            date,
+            totalConsumption: 0,
+            peakUsage: 0,
+            avgUsage: 0,
+            readingCount: 0,
+            readings: [],
+        };
+        logger.info('event.sensor.process: Initialized new daily usage state', { date });
+    }
+
+    // ========================================
+    // STEP 2: Update aggregates
+    // ========================================
+    const previousTotal = dailyUsage.totalConsumption;
+    dailyUsage.readings.push(value);
+    dailyUsage.readingCount = dailyUsage.readings.length;
+    dailyUsage.totalConsumption = dailyUsage.readings.reduce((sum, v) => sum + v, 0);
+    dailyUsage.peakUsage = Math.max(dailyUsage.peakUsage, value);
+    dailyUsage.avgUsage = dailyUsage.totalConsumption / dailyUsage.readingCount;
+
+    // Persist updated daily usage
+    await state.set('usage', `daily/${date}`, dailyUsage);
+    logger.info('event.sensor.process: Updated daily usage state', {
+        key: STATE_KEYS.usageDaily(date),
+        previousTotal,
+        newTotal: dailyUsage.totalConsumption,
+        readingCount: dailyUsage.readingCount,
+        peakUsage: dailyUsage.peakUsage,
+        avgUsage: dailyUsage.avgUsage.toFixed(2),
+    });
+
+    // ========================================
+    // STEP 3: Read user preferences
+    // ========================================
+    const userPrefs: UserPreferences | null = await state.get<UserPreferences>('user', 'preferences');
+    const thresholds = userPrefs?.thresholds ?? DEFAULT_THRESHOLDS;
+
+    logger.info('event.sensor.process: Retrieved thresholds', {
+        source: userPrefs ? 'user/preferences' : 'defaults',
+        dailyMax: thresholds.dailyMax,
+    });
+
+    // ========================================
+    // STEP 4: Deterministic decision - optimization required?
+    // ========================================
+    const thresholdExceeded = dailyUsage.totalConsumption > thresholds.dailyMax;
+
+    logger.info('event.sensor.process: Threshold check', {
+        totalConsumption: dailyUsage.totalConsumption,
+        dailyMax: thresholds.dailyMax,
+        thresholdExceeded,
+    });
+
+    if (thresholdExceeded) {
+        // ========================================
+        // STEP 5: Emit optimization.required
+        // ========================================
+        const optimizationId = `opt-${date}-${Date.now()}`;
+
+        await emit({
+            topic: TOPICS.OPTIMIZATION_REQUIRED,
+            data: {
+                optimizationId,
+                date,
+                totalConsumption: dailyUsage.totalConsumption,
+                threshold: thresholds.dailyMax,
+                excessAmount: dailyUsage.totalConsumption - thresholds.dailyMax,
+                triggeredAt: new Date().toISOString(),
+            },
+        });
+
+        logger.info('event.sensor.process: EMITTED optimization.required', {
+            topic: TOPICS.OPTIMIZATION_REQUIRED,
+            optimizationId,
+            totalConsumption: dailyUsage.totalConsumption,
+            threshold: thresholds.dailyMax,
+        });
+    } else {
+        logger.info('event.sensor.process: No optimization needed', {
+            totalConsumption: dailyUsage.totalConsumption,
+            remainingCapacity: thresholds.dailyMax - dailyUsage.totalConsumption,
+        });
+    }
+
+    logger.info('event.sensor.process: Processing complete');
 };

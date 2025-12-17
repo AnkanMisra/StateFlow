@@ -5,6 +5,7 @@
   "scripts": {
     "postinstall": "motia install",
     "dev": "motia dev",
+    "typecheck": "tsc --noEmit",
     "start": "motia start",
     "generate-types": "motia generate-types",
     "build": "motia build",

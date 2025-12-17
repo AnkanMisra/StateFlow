@@ -1,4 +1,4 @@
-// State key constants for EcoPilot
+// State key constants for StateFlow
 // Using these constants prevents typos and ensures consistency
 
 export const STATE_KEYS = {
