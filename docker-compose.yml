@@ -1,8 +1,19 @@
 # Docker Compose for StateFlow Backend
-# Use: docker-compose up -d
+# Use: docker-compose up
 
 services:
-  # Development server with hot reload
+  # Redis for Motia (required)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Development server
   dev:
     build:
       context: .
@@ -15,6 +26,10 @@ services:
     environment:
       - NODE_ENV=development
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # Production server
@@ -27,20 +42,10 @@ services:
     environment:
       - NODE_ENV=production
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     profiles:
       - production
-
-  # Redis for BullMQ (optional, for production queues)
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    profiles:
-      - production
-
-volumes:
-  redis_data:

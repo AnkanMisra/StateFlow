@@ -1,5 +1,5 @@
-# Dockerfile for development
-# Optimized for hot reload and debugging
+# Dockerfile for production
+# Uses external Redis (no embedded Redis Memory Server)
 
 FROM node:20-alpine
 
@@ -11,17 +11,17 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install all dependencies
+# Install dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY . .
 
-# Generate types
+# Generate types and build
 RUN npx motia generate-types
 
-# Expose Motia dev port
+# Expose Motia port
 EXPOSE 3000
 
-# Start in dev mode with hot reload
-CMD ["pnpm", "dev"]
+# Use production mode (supports external Redis)
+CMD ["pnpm", "start"]
