@@ -25,6 +25,7 @@ export const STATE_KEYS = {
 export const TOPICS = {
     SENSOR_READING_CREATED: 'sensor.reading.created',
     OPTIMIZATION_REQUIRED: 'optimization.required',
+    EXECUTION_REQUESTED: 'execution.requested',
 } as const;
 
 // Flow names
@@ -101,4 +102,10 @@ export interface SystemStatus {
     lastOptimization?: string;
     activeOptimizations: string[];
     totalOptimizationsToday: number;
+}
+
+export interface ExecutionRequest {
+    optimizationId: string;
+    decision: OptimizationDecision;
+    triggeredAt: string;
 }

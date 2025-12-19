@@ -1,20 +1,38 @@
-# job/ – Background Job Steps
+# job/ - Background Job Steps
 
-> **Phase 4** – Not yet implemented
+Phase 4: Async job execution with Motia's infrastructure-backed durability.
 
-## Planned
+## Steps
 
-| Step | Purpose |
-|------|---------|
-| `job.energy.execute` | Execute optimization actions asynchronously |
+| Step | Subscribes To | Status |
+|------|--------------|--------|
+| `job.energy.execute` | `execution.requested` | Active |
 
-## Features (Phase 4)
+## Infrastructure Config
 
-- Retries on failure
-- Backoff strategy
-- Dead letter handling
-- State updates on success/failure
+Motia handles retries and durability via infrastructure config:
 
-## Will Replace
+```typescript
+infrastructure: {
+    handler: { timeout: 30 },
+    queue: { maxRetries: 3, visibilityTimeout: 60 }
+}
+```
 
-Currently `workflow.energy.optimize` uses `simulateExecution()`. Phase 4 will replace this with real async job execution.
+## Responsibilities
+
+- Execute optimization actions asynchronously
+- Write `optimizations/{id}/executionResult` to state
+- Let Motia handle retries (no custom retry logic)
+
+## State Ownership
+
+Writes to: `optimizations/{id}/executionResult`
+
+```typescript
+{
+  success: boolean;
+  appliedAt: string;
+  details: string;
+}
+```
