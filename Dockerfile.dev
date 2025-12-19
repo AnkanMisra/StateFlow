@@ -1,0 +1,30 @@
+# Dockerfile for development
+# NOTE: Currently blocked by Motia's embedded Redis - see DOCKER.md
+
+FROM node:20-alpine
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install all dependencies
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# Run motia install manually
+RUN npx motia install || true
+
+# Copy source code
+COPY . .
+
+# Generate types
+RUN npx motia generate-types
+
+# Expose Motia dev port
+EXPOSE 3000
+
+# Start in dev mode
+CMD ["pnpm", "dev"]

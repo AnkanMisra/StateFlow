@@ -1,0 +1,39 @@
+# Docker ignore file
+# Reduces build context size
+
+node_modules
+python_modules
+.motia
+.mermaid
+dist
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test
+coverage
+tests
+
+# Docs
+docs
+*.md
+!README.md
+
+# Env files (use docker-compose environment instead)
+.env
+.env.local
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
