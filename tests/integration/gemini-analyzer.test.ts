@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createMockLogger } from '../helpers/mock-context';
-import { analyzeWithGemini, isGeminiAvailable, type AnalysisInput } from '../../src/ai/gemini-analyzer';
+import { analyzeWithGemini, isGeminiAvailable, resetGeminiClient, type AnalysisInput } from '../../src/ai/gemini-analyzer';
 
 describe('gemini-analyzer', () => {
     let mockLogger: ReturnType<typeof createMockLogger>;
@@ -16,6 +16,8 @@ describe('gemini-analyzer', () => {
     beforeEach(() => {
         mockLogger = createMockLogger();
         originalApiKey = process.env.GEMINI_API_KEY;
+        // Reset client state to ensure clean test isolation
+        resetGeminiClient();
     });
 
     afterEach(() => {
@@ -25,6 +27,8 @@ describe('gemini-analyzer', () => {
         } else {
             delete process.env.GEMINI_API_KEY;
         }
+        // Reset again after each test
+        resetGeminiClient();
     });
 
     const createInput = (overrides: Partial<AnalysisInput> = {}): AnalysisInput => ({

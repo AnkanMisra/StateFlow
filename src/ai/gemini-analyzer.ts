@@ -11,12 +11,20 @@ import { config } from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import type { OptimizationDecision } from '../constants';
 
-// Load environment variables from .env.local and .env
+// Load environment variables from .env.local and .env at module load
+// (This is intentional - backend services load env once at startup)
 config({ path: '.env.local' });
 config({ path: '.env' });
 
 // Gemini client - initialized lazily
 let genAI: GoogleGenAI | null = null;
+
+/**
+ * Reset client state (for testing only)
+ */
+export function resetGeminiClient(): void {
+    genAI = null;
+}
 
 function getGenAIClient(): GoogleGenAI {
     if (!genAI) {
@@ -89,12 +97,19 @@ Return ONLY a valid JSON object with these exact fields:
             excessPercent,
         });
 
+        // Correct format: contents must be array of {role, parts} objects
         const response = await client.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: prompt,
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: prompt }],
+                },
+            ],
         });
 
-        const text = response.text?.trim() || '';
+        // Correct response access: candidates[0].content.parts[0].text
+        const text = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
         // Extract JSON from response (handle markdown code blocks)
         let jsonStr = text;

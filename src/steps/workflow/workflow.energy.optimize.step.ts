@@ -170,45 +170,8 @@ export const handler: Handlers['workflow.energy.optimize'] = async (input, { log
         duration: `${Date.now() - new Date(triggeredAt).getTime()}ms`,
     });
 };
-
-/**
- * Deterministic analysis function (Phase 2 placeholder for AI in Phase 3)
- * Makes a decision based on the excess amount
- */
-function analyzeUsagePattern(
-    totalConsumption: number,
-    threshold: number,
-    excessAmount: number
-): OptimizationDecision {
-    // Simple deterministic logic for Phase 2
-    const excessPercent = (excessAmount / threshold) * 100;
-
-    if (excessPercent > 20) {
-        return {
-            action: 'SHIFT_LOAD',
-            targetWindow: '02:00-05:00',
-            expectedSavingsPercent: Math.min(25, excessPercent),
-            confidence: 0.85,
-            reasoning: `High excess (${excessPercent.toFixed(1)}%) - recommending load shift to off-peak hours`,
-        };
-    } else if (excessPercent > 10) {
-        return {
-            action: 'REDUCE_CONSUMPTION',
-            targetWindow: '18:00-22:00',
-            expectedSavingsPercent: Math.min(15, excessPercent),
-            confidence: 0.78,
-            reasoning: `Moderate excess (${excessPercent.toFixed(1)}%) - recommending consumption reduction during peak`,
-        };
-    } else {
-        return {
-            action: 'OPTIMIZE_SCHEDULING',
-            targetWindow: '12:00-16:00',
-            expectedSavingsPercent: Math.min(10, excessPercent),
-            confidence: 0.72,
-            reasoning: `Minor excess (${excessPercent.toFixed(1)}%) - recommending schedule optimization`,
-        };
-    }
-}
+// NOTE: analyzeUsagePattern() was removed in Phase 3
+// Now using analyzeWithGemini() from src/ai/gemini-analyzer.ts
 
 /**
  * Simulated execution (Phase 2 placeholder for job.energy.execute in Phase 4)

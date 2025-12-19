@@ -32,6 +32,9 @@ importers:
       '@motiadev/plugin-states':
         specifier: ^0.17.9-beta.191
         version: 0.17.9-beta.191(@motiadev/core@0.17.9-beta.191(@types/node@25.0.3)(redis@5.10.0)(typescript@5.9.3))(@motiadev/ui@0.17.9-beta.191(@types/react@19.2.7)(lucide-react@0.555.0(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3)))(lucide-react@0.555.0(react@19.2.3))(monaco-editor@0.55.1)(motia@0.17.9-beta.191(@types/node@25.0.3)(@types/react@19.2.7)(eslint@9.39.2(jiti@2.6.1))(lightningcss@1.30.2)(monaco-editor@0.55.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3)))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zustand@5.0.9(@types/react@19.2.7)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3)))
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       motia:
         specifier: ^0.17.9-beta.191
         version: 0.17.9-beta.191(@types/node@25.0.3)(@types/react@19.2.7)(eslint@9.39.2(jiti@2.6.1))(lightningcss@1.30.2)(monaco-editor@0.55.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))
@@ -2024,6 +2027,10 @@ packages:
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.3:
+    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -5528,6 +5535,8 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   dotenv@16.6.1: {}
+
+  dotenv@17.2.3: {}
 
   dunder-proto@1.0.1:
     dependencies:
