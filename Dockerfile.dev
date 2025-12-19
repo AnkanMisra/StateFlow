@@ -1,5 +1,5 @@
-# Dockerfile for production
-# Uses external Redis (no embedded Redis Memory Server)
+# Dockerfile for development
+# NOTE: Currently blocked by Motia's embedded Redis - see DOCKER.md
 
 FROM node:20-alpine
 
@@ -11,17 +11,20 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
+# Install all dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# Run motia install manually
+RUN npx motia install || true
 
 # Copy source code
 COPY . .
 
-# Generate types and build
+# Generate types
 RUN npx motia generate-types
 
-# Expose Motia port
+# Expose Motia dev port
 EXPOSE 3000
 
-# Use production mode (supports external Redis)
-CMD ["pnpm", "start"]
+# Start in dev mode
+CMD ["pnpm", "dev"]

@@ -1,17 +1,20 @@
 # Docker Compose for StateFlow Backend
-# Use: docker-compose up
+# NOTE: Currently blocked by Motia's embedded Redis - see DOCKER.md
 
 services:
-  # Redis for Motia (required)
+  # Redis for BullMQ (required for Motia)
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   # Development server
   dev:
@@ -21,8 +24,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./src:/app/src:ro
-      - ./motia.config.ts:/app/motia.config.ts:ro
+      - ./src:/app/src
+      - ./motia.config.ts:/app/motia.config.ts
+      - ./.motia:/app/.motia
+      - /app/node_modules
     environment:
       - NODE_ENV=development
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
@@ -31,6 +36,8 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    profiles:
+      - dev
 
   # Production server
   app:
@@ -38,7 +45,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NODE_ENV=production
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
@@ -49,3 +56,6 @@ services:
     restart: unless-stopped
     profiles:
       - production
+
+volumes:
+  redis_data:

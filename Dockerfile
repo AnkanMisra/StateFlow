@@ -15,6 +15,9 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies (skip postinstall for build)
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
+# Run motia install manually (since we skipped postinstall)
+RUN npx motia install || true
+
 # Copy source code
 COPY . .
 
@@ -24,8 +27,9 @@ RUN npx motia generate-types
 # Stage 2: Production
 FROM node:20-alpine AS production
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9 --activate
+# Install pnpm and curl for healthcheck
+RUN corepack enable && corepack prepare pnpm@9 --activate && \
+    apk add --no-cache curl
 
 WORKDIR /app
 
@@ -44,9 +48,9 @@ COPY --from=builder /app/tsconfig.json ./
 # Expose Motia default port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+# Health check disabled until /health endpoint is added to motia.config.ts
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:3000/health || exit 1
 
 # Start Motia
 CMD ["pnpm", "start"]
