@@ -31,7 +31,7 @@ export const config: EventConfig = {
     type: 'event',
     description: 'Orchestrates the energy optimization lifecycle with explicit state transitions',
     subscribes: [TOPICS.OPTIMIZATION_REQUIRED],
-    emits: [], // No downstream events in Phase 2
+    emits: [TOPICS.EXECUTION_REQUESTED],
     flows: [FLOWS.ENERGY_OPTIMIZATION],
     input: {
         type: 'object',
@@ -47,7 +47,7 @@ export const config: EventConfig = {
     },
 };
 
-export const handler: Handlers['workflow.energy.optimize'] = async (input, { logger, state }) => {
+export const handler: Handlers['workflow.energy.optimize'] = async (input, { logger, state, emit }) => {
     const { optimizationId, date, totalConsumption, threshold, excessAmount, triggeredAt } = input;
 
     logger.info('workflow.energy.optimize: WORKFLOW STARTED', {
@@ -116,68 +116,39 @@ export const handler: Handlers['workflow.energy.optimize'] = async (input, { log
     });
 
     // ========================================
-    // STATE: EXECUTING
+    // STATE: EXECUTING - Emit to Background Job Step
     // ========================================
     optimizationState.status = OPTIMIZATION_STATUS.EXECUTING;
     await state.set('optimizations', optimizationId, optimizationState);
-    logger.info('workflow.energy.optimize: STATE TRANSITION → EXECUTING', {
+    logger.info('workflow.energy.optimize: STATE TRANSITION -> EXECUTING', {
         key: STATE_KEYS.optimization(optimizationId),
         status: OPTIMIZATION_STATUS.EXECUTING,
     });
 
-    // Simulate execution (in Phase 4, this will trigger job.energy.execute)
-    // For now, we simulate a successful execution
-    const executionSuccess = simulateExecution(decision);
+    // Emit to job.energy.execute for async execution
+    // Job will write executionResult to state when complete
+    await emit({
+        topic: TOPICS.EXECUTION_REQUESTED,
+        data: {
+            optimizationId,
+            decision,
+            triggeredAt,
+        },
+    });
 
-    // ========================================
-    // STATE: COMPLETED or FAILED
-    // ========================================
-    if (executionSuccess) {
-        optimizationState.status = OPTIMIZATION_STATUS.COMPLETED;
-        optimizationState.completedAt = new Date().toISOString();
-        optimizationState.executionResult = {
-            success: true,
-            appliedAt: new Date().toISOString(),
-            details: `Successfully applied ${decision.action} optimization`,
-        };
-
-        await state.set('optimizations', optimizationId, optimizationState);
-        logger.info('workflow.energy.optimize: STATE TRANSITION → COMPLETED', {
-            key: STATE_KEYS.optimization(optimizationId),
-            status: OPTIMIZATION_STATUS.COMPLETED,
-            executionResult: optimizationState.executionResult,
-        });
-    } else {
-        optimizationState.status = OPTIMIZATION_STATUS.FAILED;
-        optimizationState.completedAt = new Date().toISOString();
-        optimizationState.executionResult = {
-            success: false,
-            appliedAt: new Date().toISOString(),
-            details: 'Execution failed - will retry in Phase 4',
-        };
-
-        await state.set('optimizations', optimizationId, optimizationState);
-        logger.info('workflow.energy.optimize: STATE TRANSITION → FAILED', {
-            key: STATE_KEYS.optimization(optimizationId),
-            status: OPTIMIZATION_STATUS.FAILED,
-            executionResult: optimizationState.executionResult,
-        });
-    }
-
-    logger.info('workflow.energy.optimize: WORKFLOW COMPLETE', {
+    logger.info('workflow.energy.optimize: EXECUTION REQUESTED', {
         optimizationId,
-        finalStatus: optimizationState.status,
+        topic: TOPICS.EXECUTION_REQUESTED,
+        action: decision.action,
+    });
+
+    // Note: Workflow has emitted to job Step
+    // Job Step will update state with executionResult
+    // Workflow completes after emitting - job executes asynchronously
+    logger.info('workflow.energy.optimize: WORKFLOW ORCHESTRATION COMPLETE', {
+        optimizationId,
+        currentStatus: OPTIMIZATION_STATUS.EXECUTING,
         duration: `${Date.now() - new Date(triggeredAt).getTime()}ms`,
+        note: 'Job Step will update final status',
     });
 };
-// NOTE: analyzeUsagePattern() was removed in Phase 3
-// Now using analyzeWithGemini() from src/ai/gemini-analyzer.ts
-
-/**
- * Simulated execution (Phase 2 placeholder for job.energy.execute in Phase 4)
- * Always succeeds for demo purposes
- */
-function simulateExecution(_decision: OptimizationDecision): boolean {
-    // Always succeed in Phase 2 for demo visibility
-    return true;
-}
