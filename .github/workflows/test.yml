@@ -1,4 +1,4 @@
-name: Typecheck
+name: Test
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  typecheck:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,5 +27,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts
 
-      - name: Run TypeScript typecheck
-        run: pnpm typecheck
+      - name: Run tests
+        run: pnpm test

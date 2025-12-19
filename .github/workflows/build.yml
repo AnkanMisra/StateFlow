@@ -1,4 +1,4 @@
-name: Typecheck
+name: Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  typecheck:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,5 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts
 
-      - name: Run TypeScript typecheck
-        run: pnpm typecheck
+      - name: Generate Motia types
+        run: npx motia generate-types
+
+      - name: Run build
+        run: pnpm build

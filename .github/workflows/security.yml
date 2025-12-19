@@ -1,13 +1,15 @@
-name: Typecheck
+name: Security
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
 
 jobs:
-  typecheck:
+  audit:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,5 +29,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts
 
-      - name: Run TypeScript typecheck
-        run: pnpm typecheck
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
