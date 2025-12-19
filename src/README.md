@@ -8,27 +8,28 @@ Core application logic for StateFlow.
 |------|-------------|
 | `constants.ts` | Centralized constants: state keys, event topics, types |
 | `steps/` | All Motia Step definitions |
+| `ai/` | Phase 3: Gemini AI integration |
 
 ## Architecture
 
 ```
 src/
-├── constants.ts          # Shared constants & types
-└── steps/
-    ├── api/              # HTTP API Steps
-    ├── event/            # Event-driven Steps  
-    ├── workflow/         # Workflow orchestration Steps
-    ├── ai/               # AI agent Steps (Phase 3)
-    ├── job/              # Background job Steps (Phase 4)
-    ├── cron/             # Scheduled Steps
-    └── stream/           # Real-time streaming Steps (Phase 5)
+  constants.ts          # Shared constants and types
+  ai/
+    gemini-analyzer.ts  # Gemini API integration (Phase 3)
+  steps/
+    api/                # HTTP API Steps
+    event/              # Event-driven Steps  
+    workflow/           # Workflow orchestration Steps
+    ai/                 # AI agent Steps (placeholder)
+    job/                # Background job Steps (Phase 4)
+    cron/               # Scheduled Steps
+    stream/             # Real-time streaming Steps (Phase 5)
 ```
-
-## Key Files
-
-- **`constants.ts`** – Defines `STATE_KEYS`, `TOPICS`, `FLOWS`, `OPTIMIZATION_STATUS`, and TypeScript types used across all Steps.
 
 ## Dependencies
 
 - `motia` – Core framework
-- `zod` – Schema validation (via Motia)
+- `zod` – Schema validation
+- `@google/genai` – Gemini AI SDK (Phase 3)
+- `dotenv` – Environment variable loading
