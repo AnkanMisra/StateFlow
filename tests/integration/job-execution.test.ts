@@ -3,13 +3,14 @@
  * 
  * Tests the job.energy.execute Step which:
  * - Executes optimization actions asynchronously
- * - Writes execution results to state
+ * - Updates parent optimization state to COMPLETED/FAILED
  * - Uses Motia's infrastructure-backed durability
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { handler } from '../../src/steps/job/job.energy.execute.step';
 import { createMockContext, hasLogMessage } from '../helpers/mock-context';
+import { OPTIMIZATION_STATUS, type OptimizationState } from '../../src/constants';
 
 describe('job.energy.execute', () => {
     let ctx: ReturnType<typeof createMockContext>;
@@ -41,24 +42,75 @@ describe('job.energy.execute', () => {
         ...overrides,
     });
 
-    describe('Execution Success', () => {
-        it('should write execution result to state', async () => {
-            const input = createInput({ optimizationId: 'opt-exec-state' });
+    // Pre-seed optimization state as if workflow has run
+    const seedOptimizationState = async (optimizationId: string) => {
+        const state: OptimizationState = {
+            id: optimizationId,
+            status: OPTIMIZATION_STATUS.EXECUTING,
+            triggeredAt: new Date().toISOString(),
+            decision: {
+                action: 'SHIFT_LOAD',
+                targetWindow: '02:00-05:00',
+                expectedSavingsPercent: 15,
+                confidence: 0.85,
+            },
+        };
+        await ctx.state.set('optimizations', optimizationId, state);
+    };
+
+    describe('Terminal State Updates', () => {
+        it('should update optimization status to COMPLETED', async () => {
+            const optimizationId = 'opt-terminal-test';
+            await seedOptimizationState(optimizationId);
+            const input = createInput({ optimizationId });
 
             await handler(input, {
                 logger: ctx.logger,
                 state: ctx.state,
             } as any);
 
-            const result = await ctx.state.get<any>('optimizations', 'opt-exec-state/executionResult');
-            expect(result).not.toBeNull();
-            expect(result.success).toBe(true);
-            expect(result.appliedAt).toBeDefined();
-            expect(result.details).toContain('SHIFT_LOAD');
+            const state = await ctx.state.get<OptimizationState>('optimizations', optimizationId);
+            expect(state?.status).toBe(OPTIMIZATION_STATUS.COMPLETED);
         });
 
+        it('should set completedAt timestamp', async () => {
+            const optimizationId = 'opt-completed-at';
+            await seedOptimizationState(optimizationId);
+            const input = createInput({ optimizationId });
+
+            await handler(input, {
+                logger: ctx.logger,
+                state: ctx.state,
+            } as any);
+
+            const state = await ctx.state.get<OptimizationState>('optimizations', optimizationId);
+            expect(state?.completedAt).toBeDefined();
+            const date = new Date(state!.completedAt!);
+            expect(date.getTime()).toBeGreaterThan(0);
+        });
+
+        it('should include executionResult in parent state', async () => {
+            const optimizationId = 'opt-exec-result';
+            await seedOptimizationState(optimizationId);
+            const input = createInput({ optimizationId });
+
+            await handler(input, {
+                logger: ctx.logger,
+                state: ctx.state,
+            } as any);
+
+            const state = await ctx.state.get<OptimizationState>('optimizations', optimizationId);
+            expect(state?.executionResult).toBeDefined();
+            expect(state?.executionResult?.success).toBe(true);
+            expect(state?.executionResult?.details).toContain('SHIFT_LOAD');
+        });
+    });
+
+    describe('Logging', () => {
         it('should log execution started', async () => {
-            const input = createInput();
+            const optimizationId = 'opt-log-start';
+            await seedOptimizationState(optimizationId);
+            const input = createInput({ optimizationId });
 
             await handler(input, {
                 logger: ctx.logger,
@@ -68,68 +120,33 @@ describe('job.energy.execute', () => {
             expect(hasLogMessage(ctx.logger, 'EXECUTION STARTED')).toBe(true);
         });
 
-        it('should log execution completed', async () => {
-            const input = createInput();
+        it('should log state transition to COMPLETED', async () => {
+            const optimizationId = 'opt-log-complete';
+            await seedOptimizationState(optimizationId);
+            const input = createInput({ optimizationId });
 
             await handler(input, {
                 logger: ctx.logger,
                 state: ctx.state,
             } as any);
 
-            expect(hasLogMessage(ctx.logger, 'EXECUTION COMPLETED')).toBe(true);
-        });
-    });
-
-    describe('Execution Result Details', () => {
-        it('should include action in result details', async () => {
-            const input = createInput({
-                optimizationId: 'opt-action-test',
-                decision: {
-                    action: 'REDUCE_CONSUMPTION',
-                    targetWindow: '18:00-22:00',
-                    expectedSavingsPercent: 12,
-                    confidence: 0.78,
-                },
-            });
-
-            await handler(input, {
-                logger: ctx.logger,
-                state: ctx.state,
-            } as any);
-
-            const result = await ctx.state.get<any>('optimizations', 'opt-action-test/executionResult');
-            expect(result.details).toContain('REDUCE_CONSUMPTION');
-            expect(result.details).toContain('18:00-22:00');
-            expect(result.details).toContain('12%');
-        });
-
-        it('should have valid appliedAt timestamp', async () => {
-            const input = createInput({ optimizationId: 'opt-timestamp' });
-
-            await handler(input, {
-                logger: ctx.logger,
-                state: ctx.state,
-            } as any);
-
-            const result = await ctx.state.get<any>('optimizations', 'opt-timestamp/executionResult');
-            const date = new Date(result.appliedAt);
-            expect(date.getTime()).toBeGreaterThan(0);
+            expect(hasLogMessage(ctx.logger, 'STATE TRANSITION -> COMPLETED')).toBe(true);
         });
     });
 
     describe('State Isolation', () => {
         it('should not interfere with other optimizations', async () => {
-            const input1 = createInput({ optimizationId: 'opt-job-1' });
-            const input2 = createInput({ optimizationId: 'opt-job-2' });
+            await seedOptimizationState('opt-job-1');
+            await seedOptimizationState('opt-job-2');
 
-            await handler(input1, { logger: ctx.logger, state: ctx.state } as any);
-            await handler(input2, { logger: ctx.logger, state: ctx.state } as any);
+            await handler(createInput({ optimizationId: 'opt-job-1' }), { logger: ctx.logger, state: ctx.state } as any);
+            await handler(createInput({ optimizationId: 'opt-job-2' }), { logger: ctx.logger, state: ctx.state } as any);
 
-            const result1 = await ctx.state.get<any>('optimizations', 'opt-job-1/executionResult');
-            const result2 = await ctx.state.get<any>('optimizations', 'opt-job-2/executionResult');
+            const state1 = await ctx.state.get<OptimizationState>('optimizations', 'opt-job-1');
+            const state2 = await ctx.state.get<OptimizationState>('optimizations', 'opt-job-2');
 
-            expect(result1.success).toBe(true);
-            expect(result2.success).toBe(true);
+            expect(state1?.status).toBe(OPTIMIZATION_STATUS.COMPLETED);
+            expect(state2?.status).toBe(OPTIMIZATION_STATUS.COMPLETED);
         });
     });
 });

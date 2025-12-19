@@ -15,9 +15,10 @@ import type { EventConfig, Handlers } from 'motia';
 import {
     TOPICS,
     FLOWS,
-    STATE_KEYS,
+    OPTIMIZATION_STATUS,
     type ExecutionRequest,
     type OptimizationResult,
+    type OptimizationState,
 } from '../../constants';
 
 export const config: EventConfig = {
@@ -52,7 +53,7 @@ export const config: EventConfig = {
 };
 
 export const handler: Handlers['job.energy.execute'] = async (input, { logger, state }) => {
-    const { optimizationId, decision, triggeredAt } = input as ExecutionRequest;
+    const { optimizationId, decision } = input as ExecutionRequest;
 
     logger.info('job.energy.execute: EXECUTION STARTED', {
         optimizationId,
@@ -62,11 +63,26 @@ export const handler: Handlers['job.energy.execute'] = async (input, { logger, s
 
     try {
         // Execute the optimization action
-        // In production, this would integrate with actual energy management systems
         const executionResult: OptimizationResult = await executeOptimization(decision, logger);
 
-        // Write execution result to state
-        await state.set('optimizations', `${optimizationId}/executionResult`, executionResult);
+        // Read current optimization state
+        const currentState = await state.get<OptimizationState>('optimizations', optimizationId);
+
+        if (currentState) {
+            // Update to COMPLETED status with executionResult
+            const completedState: OptimizationState = {
+                ...currentState,
+                status: OPTIMIZATION_STATUS.COMPLETED,
+                completedAt: new Date().toISOString(),
+                executionResult,
+            };
+            await state.set('optimizations', optimizationId, completedState);
+
+            logger.info('job.energy.execute: STATE TRANSITION -> COMPLETED', {
+                optimizationId,
+                status: OPTIMIZATION_STATUS.COMPLETED,
+            });
+        }
 
         logger.info('job.energy.execute: EXECUTION COMPLETED', {
             optimizationId,
@@ -75,14 +91,30 @@ export const handler: Handlers['job.energy.execute'] = async (input, { logger, s
         });
 
     } catch (error) {
-        // Write failure result to state
+        // Read current optimization state for failure update
+        const currentState = await state.get<OptimizationState>('optimizations', optimizationId);
+
         const failureResult: OptimizationResult = {
             success: false,
             appliedAt: new Date().toISOString(),
             details: `Execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
 
-        await state.set('optimizations', `${optimizationId}/executionResult`, failureResult);
+        if (currentState) {
+            // Update to FAILED status with executionResult
+            const failedState: OptimizationState = {
+                ...currentState,
+                status: OPTIMIZATION_STATUS.FAILED,
+                completedAt: new Date().toISOString(),
+                executionResult: failureResult,
+            };
+            await state.set('optimizations', optimizationId, failedState);
+
+            logger.info('job.energy.execute: STATE TRANSITION -> FAILED', {
+                optimizationId,
+                status: OPTIMIZATION_STATUS.FAILED,
+            });
+        }
 
         logger.error('job.energy.execute: EXECUTION FAILED', {
             optimizationId,
