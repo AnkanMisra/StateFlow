@@ -24,6 +24,7 @@ import {
     type OptimizationState,
     type OptimizationDecision,
 } from '../../constants';
+import { analyzeWithGemini, type AIDecision } from '../../ai/gemini-analyzer';
 
 export const config: EventConfig = {
     name: 'workflow.energy.optimize',
@@ -73,7 +74,7 @@ export const handler: Handlers['workflow.energy.optimize'] = async (input, { log
     });
 
     // ========================================
-    // STATE: ANALYZING
+    // STATE: ANALYZING (AI-powered in Phase 3)
     // ========================================
     optimizationState.status = OPTIMIZATION_STATUS.ANALYZING;
     await state.set('optimizations', optimizationId, optimizationState);
@@ -82,12 +83,16 @@ export const handler: Handlers['workflow.energy.optimize'] = async (input, { log
         status: OPTIMIZATION_STATUS.ANALYZING,
     });
 
-    // Simulate analysis (in Phase 3, this will call AI)
-    // For now, we make a deterministic decision based on excess amount
-    const analysisResult = analyzeUsagePattern(totalConsumption, threshold, excessAmount);
+    // AI-powered analysis using Gemini (with fallback to deterministic)
+    const analysisResult: AIDecision = await analyzeWithGemini(
+        { totalConsumption, threshold, excessAmount, date },
+        logger
+    );
     logger.info('workflow.energy.optimize: Analysis complete', {
         recommendation: analysisResult.action,
         expectedSavings: analysisResult.expectedSavingsPercent,
+        source: analysisResult.source,
+        model: analysisResult.model,
     });
 
     // ========================================

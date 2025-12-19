@@ -10,3 +10,7 @@ dist
 # Documentation 
 docs
 motia-workbench.json
+
+# Environment variables (API keys)
+.env
+.env.local
