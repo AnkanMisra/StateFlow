@@ -16,15 +16,13 @@ pnpm test:watch
 
 ```
 tests/
-├── helpers/           # Test utilities and mocks
-│   ├── README.md
-│   └── mock-context.ts
-└── integration/       # Integration tests
-    ├── README.md
-    ├── api-sensor-ingest.test.ts
-    ├── event-processing.test.ts
-    ├── gemini-analyzer.test.ts
-    └── workflow-lifecycle.test.ts
+  helpers/              # Test utilities and mocks
+    mock-context.ts
+  integration/          # Integration tests
+    api-sensor-ingest.test.ts
+    event-processing.test.ts
+    gemini-analyzer.test.ts   # Phase 3
+    workflow-lifecycle.test.ts
 ```
 
 ## Test Coverage
@@ -32,11 +30,11 @@ tests/
 | File | Tests | Coverage |
 |------|-------|----------|
 | `api-sensor-ingest.test.ts` | 15 | Input validation, defaults, state, events |
-| `event-processing.test.ts` | 16 | Aggregation, thresholds, idempotency, edge cases |
-| `gemini-analyzer.test.ts` | 21 | AI availability, fallback, tier thresholds, edge cases |
-| `workflow-lifecycle.test.ts` | 17 | State transitions, decisions, isolation |
+| `event-processing.test.ts` | 16 | Aggregation, thresholds, idempotency |
+| `gemini-analyzer.test.ts` | 21 | AI fallback, decision logic, edge cases |
+| `workflow-lifecycle.test.ts` | 17 | State transitions, AI integration |
 
-**Total: 69 tests**
+Total: 69 tests
 
 ## Dependencies
 

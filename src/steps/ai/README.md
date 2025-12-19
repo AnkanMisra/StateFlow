@@ -1,34 +1,17 @@
 # ai/ – AI Agent Steps
 
-> **Phase 3** – Not yet implemented
+Placeholder – Actual AI integration is in `src/ai/gemini-analyzer.ts`
 
-## Planned
+This directory is reserved for future AI Step definitions if needed (e.g., using Motia's AI Step type).
 
-| Step | Purpose |
-|------|---------|
-| `ai.energy.analyze` | Call Gemini 2.5 Flash for intelligent optimization decisions |
+## Current Implementation
 
-## Architecture (Phase 3)
+AI analysis is integrated directly into `workflow.energy.optimize` via:
+- `src/ai/gemini-analyzer.ts` – Gemini API client
+- Model: `gemini-3-flash-preview`
 
-```
-optimization.required
-        │
-        ▼
-workflow.energy.optimize
-        │
-        ▼ (in ANALYZING state)
-┌─────────────────────────────────────┐
-│        ai.energy.analyze            │
-│  ─────────────────────────────────  │
-│  Input: usage data, thresholds      │
-│  Output: structured decision JSON   │
-│  Model: gemini-2.5-flash            │
-└─────────────────────────────────────┘
-        │
-        ▼
-Returns to workflow with AI decision
-```
+## Future Use Cases
 
-## Will Replace
-
-Currently `workflow.energy.optimize` uses deterministic `analyzeUsagePattern()`. Phase 3 will replace this with Gemini-powered analysis.
+If separate AI Steps are needed:
+- `ai.energy.forecast` – Predict usage patterns
+- `ai.appliance.detect` – Identify high-consumption appliances

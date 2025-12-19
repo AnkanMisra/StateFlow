@@ -8,8 +8,10 @@ Tests that verify Step handlers work correctly with mocked context.
 |------|----------------|-------|
 | `api-sensor-ingest.test.ts` | `api.sensor.ingest` | 15 |
 | `event-processing.test.ts` | `event.sensor.process` | 16 |
-| `gemini-analyzer.test.ts` | `analyzeWithGemini` | 21 |
+| `gemini-analyzer.test.ts` | `gemini-analyzer` | 21 |
 | `workflow-lifecycle.test.ts` | `workflow.energy.optimize` | 17 |
+
+Total: 69 tests
 
 ## Run
 
@@ -22,25 +24,20 @@ pnpm test
 ### api-sensor-ingest.test.ts
 - Input validation (missing fields, negative values)
 - Default values (unit, type)
-- State persistence
-- Event emission
-- Response structure
+- State persistence and event emission
 
 ### event-processing.test.ts
 - Daily usage aggregation
 - Threshold checking
-- **Idempotency guard** (critical!)
-- Edge cases: boundaries, multiple sensors, threshold updates
+- Idempotency guard (critical)
 
-### gemini-analyzer.test.ts
-- AI availability detection (`isGeminiAvailable`)
-- Fallback behavior when API key missing
-- **Tier thresholds**: SHIFT_LOAD (>20%), REDUCE_CONSUMPTION (10-20%), OPTIMIZE_SCHEDULING (<10%)
-- Decision field validation (action, targetWindow, confidence, reasoning)
-- Edge cases: small thresholds, large excess, floating point
+### gemini-analyzer.test.ts (Phase 3)
+- `isGeminiAvailable()` checks
+- Fallback behavior when no API key
+- Decision logic tiers
+- Edge cases
 
 ### workflow-lifecycle.test.ts
-- State transitions (RECEIVED → COMPLETED)
-- Decision persistence
-- Deterministic analysis tiers
-- Extreme values and state isolation
+- State transitions (RECEIVED to COMPLETED)
+- AI-powered analysis (Phase 3)
+- Extreme values and isolation

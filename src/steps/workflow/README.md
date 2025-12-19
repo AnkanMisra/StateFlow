@@ -4,37 +4,34 @@ Durable workflow orchestration Steps.
 
 ## Steps
 
-| Step | Subscribes To | Purpose |
-|------|--------------|---------|
-| `workflow.energy.optimize` | `optimization.required` | Orchestrates optimization lifecycle |
+| Step | Subscribes To | Status |
+|------|--------------|--------|
+| `workflow.energy.optimize` | `optimization.required` | Active + AI (Phase 3) |
+
+## AI Integration (Phase 3)
+
+The workflow now uses Gemini AI for analysis:
+
+```typescript
+import { analyzeWithGemini } from '../../ai/gemini-analyzer';
+
+const analysisResult = await analyzeWithGemini(
+    { totalConsumption, threshold, excessAmount, date },
+    logger
+);
+// analysisResult.source is 'ai' or 'fallback'
+```
 
 ## Lifecycle States
 
 ```
-RECEIVED → ANALYZING → DECIDED → EXECUTING → COMPLETED
-                                          ↘ FAILED
+RECEIVED -> ANALYZING -> DECIDED -> EXECUTING -> COMPLETED
+                                              \-> FAILED
 ```
-
-Each transition:
-1. Updates `optimizations/{id}` state
-2. Logs the transition
-3. Proceeds to next stage
 
 ## State Ownership
 
-This Step is the **exclusive owner** of `optimizations/{id}`. No other Step mutates this state.
-
-## Deterministic Analysis (Phase 2)
-
-Current decision logic based on excess percentage:
-
-| Excess % | Action | Target Window |
-|----------|--------|---------------|
-| > 20% | `SHIFT_LOAD` | 02:00-05:00 |
-| 10-20% | `REDUCE_CONSUMPTION` | 18:00-22:00 |
-| < 10% | `OPTIMIZE_SCHEDULING` | 12:00-16:00 |
-
-**Phase 3** will replace this with Gemini AI.
+This Step is the exclusive owner of `optimizations/{id}`.
 
 ## State Structure
 
@@ -50,11 +47,7 @@ Current decision logic based on excess percentage:
     expectedSavingsPercent: number;
     confidence: number;
     reasoning: string;
-  };
-  executionResult?: {
-    success: boolean;
-    appliedAt: string;
-    details: string;
+    source: 'ai' | 'fallback';  // Phase 3
   };
 }
 ```
