@@ -272,5 +272,4 @@ Access Motia Workbench at `http://localhost:3000`:
 | Queues | Background job monitoring |
 
 
-
 </div>

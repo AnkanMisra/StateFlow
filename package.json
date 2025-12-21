@@ -5,6 +5,7 @@
   "scripts": {
     "postinstall": "motia install",
     "dev": "motia dev",
+    "dev:all": "brew services start redis && motia dev",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
