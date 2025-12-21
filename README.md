@@ -1,6 +1,10 @@
-# StateFlow Backend
 
-Event-driven energy optimization backend powered by AI decision-making.
+<p align="center">
+  <h1>StateFlow Backend</h1>
+  <img src="docs/images/banner.png" alt="StateFlow Banner" width="600">
+  <br><br>
+  <strong>Event-driven energy optimization backend powered by AI decision-making.</strong>
+</p>
 
 ## Overview
 
