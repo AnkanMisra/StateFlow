@@ -94,7 +94,7 @@ curl -X POST http://localhost:3000/api/user/preferences \
 For deployed demos, replace `http://localhost:3000` with your Motia Cloud API Gateway URL:
 
 ```bash
-curl -X POST https://your-project.motia.cloud/api/sensor/ingest \
+curl -X POST https://i3hk14-hobd8j.nkanisra-dkzq67y2cn.motia.cloud/api/sensor/ingest \
   -H "Content-Type: application/json" \
-  -d '{"sensorId":"sensor-001","value":150,"unit":"kWh","type":"energy"}'
+  -d '{"sensorId":"cloud-test-001","value":150,"unit":"kWh","type":"energy"}'
 ```
