@@ -1,10 +1,17 @@
-
-<p align="center">
+<div align="center">
   <h1>StateFlow Backend</h1>
-  <img src="docs/images/banner.png" alt="StateFlow Banner" width="600">
-  <br><br>
+
+  <img
+    src="https://github.com/user-attachments/assets/683a1c3a-4b3a-4880-a125-7fa79371da13"
+    alt="StateFlow Backend Banner"
+    width="80%"
+  />
+
+  <br /><br />
+
   <strong>Event-driven energy optimization backend powered by AI decision-making.</strong>
-</p>
+</div>
+
 
 ## Overview
 
