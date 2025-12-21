@@ -97,6 +97,8 @@ stateDiagram-v2
 | State Management | Centralized | Per-request |
 | Real-time Updates | Native streaming | Polling required |
 
+</div>
+
 ## Quick Start
 
 ### Prerequisites
@@ -106,6 +108,8 @@ stateDiagram-v2
 | Node.js | 20+ | `node --version` |
 | pnpm | 9+ | `pnpm --version` |
 | Redis | 7+ | `redis-cli ping` |
+
+
 
 ### Installation
 
@@ -148,6 +152,8 @@ Expected response:
   "eventEmitted": "sensor.reading.created"
 }
 ```
+
+<div align="center">
 
 ## API Reference
 
@@ -227,6 +233,8 @@ When API is unavailable, deterministic rules apply:
 | job-execution.test.ts | 6 | Background execution, retry handling |
 | **Total** | **75** | **All passing** |
 
+</div>
+
 ### Running Tests
 
 ```bash
@@ -240,6 +248,7 @@ pnpm test api-sensor-ingest
 pnpm test --reporter=verbose
 ```
 
+<div align="center">
 
 ## Performance
 
