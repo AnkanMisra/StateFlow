@@ -8,12 +8,12 @@ import { EventHandler, ApiRouteHandler, ApiResponse, MotiaStream, CronHandler } 
 
 declare module 'motia' {
   interface FlowContextStateStreams {
-    
+    'energyStatus': MotiaStream<{ id: string; optimizationId: string; status: 'RECEIVED' | 'ANALYZING' | 'DECIDED' | 'EXECUTING' | 'COMPLETED' | 'FAILED'; progress: number; decision?: { action: string; targetWindow: string; expectedSavingsPercent: number; confidence: number; reasoning?: string }; executionResult?: { success: boolean; appliedAt: string; details: string }; updatedAt: string }>
   }
 
   interface Handlers {
-    'workflow.energy.optimize': EventHandler<{ optimizationId: string; date: string; totalConsumption: number; threshold: number; excessAmount: number; triggeredAt: string }, { topic: 'execution.requested'; data: { optimizationId: string; decision: { action?: string; targetWindow?: string; expectedSavingsPercent?: number; confidence?: number; reasoning?: string }; triggeredAt: string } }>
-    'job.energy.execute': EventHandler<{ optimizationId: string; decision: { action?: string; targetWindow?: string; expectedSavingsPercent?: number; confidence?: number; reasoning?: string }; triggeredAt: string }, never>
+    'workflow.energy.optimize': EventHandler<{ optimizationId: string; date: string; totalConsumption: number; threshold: number; excessAmount: number; triggeredAt: string }, { topic: 'execution.requested'; data: { optimizationId: string; decision: { action?: string; targetWindow?: string; expectedSavingsPercent?: number; confidence?: number; reasoning?: string }; triggeredAt: string; date: string } }>
+    'job.energy.execute': EventHandler<{ optimizationId: string; decision: { action?: string; targetWindow?: string; expectedSavingsPercent?: number; confidence?: number; reasoning?: string }; triggeredAt: string; date: string }, never>
     'event.sensor.process': EventHandler<{ sensorId: string; value: number; unit: string; type: string; timestamp: string; date: string }, { topic: 'optimization.required'; data: { optimizationId: string; date: string; totalConsumption: number; threshold: number; excessAmount: number; triggeredAt: string } }>
     'api.user.preferences': ApiRouteHandler<Record<string, unknown>, unknown, never>
     'api.sensor.ingest': ApiRouteHandler<Record<string, unknown>, unknown, { topic: 'sensor.reading.created'; data: { sensorId: string; value: number; unit: string; type: string; timestamp: string; date: string } }>

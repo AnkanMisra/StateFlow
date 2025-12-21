@@ -8,6 +8,7 @@
  * Responsibility:
  * - Execute optimization actions asynchronously
  * - Write execution results to state
+ * - Publish COMPLETED/FAILED status to energyStatus stream
  * - Uses Motia's built-in retry/durability (no custom retry logic)
  */
 
@@ -43,8 +44,9 @@ export const config: EventConfig = {
                 },
             },
             triggeredAt: { type: 'string' },
+            date: { type: 'string' },
         },
-        required: ['optimizationId', 'decision', 'triggeredAt'],
+        required: ['optimizationId', 'decision', 'triggeredAt', 'date'],
     },
     infrastructure: {
         handler: { timeout: 30 },
@@ -52,14 +54,38 @@ export const config: EventConfig = {
     },
 };
 
-export const handler: Handlers['job.energy.execute'] = async (input, { logger, state }) => {
-    const { optimizationId, decision } = input as ExecutionRequest;
+export const handler: Handlers['job.energy.execute'] = async (input, { logger, state, streams }) => {
+    const { optimizationId, decision, date } = input as ExecutionRequest;
 
     logger.info('job.energy.execute: EXECUTION STARTED', {
         optimizationId,
         action: decision.action,
         targetWindow: decision.targetWindow,
     });
+
+    // Helper to publish status to stream
+    const publishStatus = async (
+        status: 'RECEIVED' | 'ANALYZING' | 'DECIDED' | 'EXECUTING' | 'COMPLETED' | 'FAILED',
+        executionResult?: OptimizationResult
+    ) => {
+        try {
+            await streams.energyStatus.set(date, optimizationId, {
+                id: optimizationId,
+                optimizationId,
+                status,
+                progress: 100,
+                decision,
+                executionResult,
+                updatedAt: new Date().toISOString(),
+            });
+        } catch (error) {
+            logger.warn('job.energy.execute: Stream update failed (non-blocking)', {
+                optimizationId,
+                status,
+                error: error instanceof Error ? error.message : 'Unknown',
+            });
+        }
+    };
 
     try {
         // Execute the optimization action
@@ -77,6 +103,7 @@ export const handler: Handlers['job.energy.execute'] = async (input, { logger, s
                 executionResult,
             };
             await state.set('optimizations', optimizationId, completedState);
+            await publishStatus(OPTIMIZATION_STATUS.COMPLETED, executionResult);
 
             logger.info('job.energy.execute: STATE TRANSITION -> COMPLETED', {
                 optimizationId,
@@ -109,6 +136,7 @@ export const handler: Handlers['job.energy.execute'] = async (input, { logger, s
                 executionResult: failureResult,
             };
             await state.set('optimizations', optimizationId, failedState);
+            await publishStatus(OPTIMIZATION_STATUS.FAILED, failureResult);
 
             logger.info('job.energy.execute: STATE TRANSITION -> FAILED', {
                 optimizationId,
