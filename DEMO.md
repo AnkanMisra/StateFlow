@@ -23,8 +23,6 @@ curl -X POST http://localhost:3000/api/sensor/ingest \
   - Background job execution
   - Real-time streaming updates
 
-### What to Say
-> "This single API call exceeds the threshold and triggers the entire pipeline."
 
 ---
 
@@ -43,8 +41,6 @@ curl -X POST http://localhost:3000/api/sensor/ingest \
 - The existing `optimizationTriggered` state prevents re-triggering
 - Demonstrates idempotency and production safety
 
-### What to Say
-> "Even though the value is higher, the system does not create a second optimization for the same day."
 
 ---
 
@@ -63,8 +59,6 @@ curl -X POST http://localhost:3000/api/sensor/ingest \
 - No workflow, AI, or job is triggered
 - Confirms the system behaves correctly when no action is needed
 
-### What to Say
-> "This stays below the threshold, so no optimization is triggered."
 
 ---
 
