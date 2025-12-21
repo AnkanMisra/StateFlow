@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - esbuild
+  - msgpackr-extract
+  - redis-memory-server

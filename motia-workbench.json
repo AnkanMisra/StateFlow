@@ -17,20 +17,24 @@
     "id": "energy-optimization-flow",
     "config": {
       "src/steps/workflow/workflow.energy.optimize.step.ts": {
-        "x": -1073,
-        "y": 81
+        "x": -1561,
+        "y": 153
+      },
+      "src/steps/job/job.energy.execute.step.ts": {
+        "x": -957,
+        "y": 95
       },
       "src/steps/event/event.sensor.process.step.ts": {
-        "x": -1539,
-        "y": 118
+        "x": -1732,
+        "y": -116
       },
       "src/steps/api/api.user.preferences.step.ts": {
-        "x": -1053,
-        "y": -193
+        "x": -1135,
+        "y": -175
       },
       "src/steps/api/api.sensor.ingest.step.ts": {
-        "x": -1928,
-        "y": -46
+        "x": -2156,
+        "y": 4
       }
     }
   }

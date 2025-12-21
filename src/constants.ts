@@ -108,4 +108,5 @@ export interface ExecutionRequest {
     optimizationId: string;
     decision: OptimizationDecision;
     triggeredAt: string;
+    date: string; // Used as stream groupId
 }
