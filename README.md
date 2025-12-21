@@ -10,7 +10,7 @@
   <br /><br />
 
   <strong>Event-driven energy optimization backend powered by AI decision-making.</strong>
-</div>
+
 
 
 ## Overview
@@ -240,28 +240,6 @@ pnpm test api-sensor-ingest
 pnpm test --reporter=verbose
 ```
 
-## Project Structure
-
-```
-src/
-├── ai/
-│   └── gemini-analyzer.ts       # Gemini API client with fallback
-├── steps/
-│   ├── api/
-│   │   ├── api.sensor.ingest.step.ts
-│   │   └── api.user.preferences.step.ts
-│   ├── event/
-│   │   └── event.sensor.process.step.ts
-│   ├── workflow/
-│   │   └── workflow.energy.optimize.step.ts
-│   ├── job/
-│   │   └── job.energy.execute.step.ts
-│   └── stream/
-│       └── stream.energy.status.stream.ts
-├── constants.ts                 # Shared types, topics, state keys
-tests/
-└── integration/                 # Integration test suite
-```
 
 ## Performance
 
@@ -284,6 +262,6 @@ Access Motia Workbench at `http://localhost:3000`:
 | Logs | Structured logging with trace correlation |
 | Queues | Background job monitoring |
 
-## License
 
-MIT
+
+</div>
